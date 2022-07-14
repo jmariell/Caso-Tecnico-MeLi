@@ -1,0 +1,40 @@
+import requests
+import pandas as pd
+
+url_iphone7 = 'https://api.mercadolibre.com/sites/MLA/search?q=iphone%207&limit=50#json'
+url_iphone8 = 'https://api.mercadolibre.com/sites/MLA/search?q=iphone%208&limit=50#json'
+url_samsung_galaxy_s7 = 'https://api.mercadolibre.com/sites/MLA/search?q=samsung%20galaxy%20s7&limit=50#json'
+
+"""  Se crea un DataFrame en base a la propiedad 'results' """
+df_results = pd.DataFrame(requests.get(url_iphone7).json()['results'])
+
+
+""" En este ciclo se van agregando al data frame 'df_items' y 'df2_items' las columnas de 'get_items' que necesito en mi archivo csv final,
+    para su posterior análisis en Tableau """
+   
+for indx, i in enumerate(df_results['id']):
+    url_items = "https://api.mercadolibre.com/items/"
+    get_items = requests.get(url_items + i).json()
+    """ Variable de control """
+    print(indx)
+    if indx==0:
+        df_items = pd.DataFrame(get_items['sale_terms'])
+        df_items['id'] = get_items['id']
+        df_items['title'] = get_items['title']
+        df_items['price'] = get_items['price']
+        df_items['available_quantity'] = get_items['available_quantity']
+        df_items['sold_quantity'] = get_items['sold_quantity']
+    else:
+        df2_items = pd.DataFrame(get_items['sale_terms'])
+        df2_items['id'] = get_items['id']
+        df2_items['title'] = get_items['title']
+        df2_items['price'] = get_items['price']
+        df2_items['available_quantity'] = get_items['available_quantity']
+        df2_items['sold_quantity'] = get_items['sold_quantity']
+       
+        df = pd.concat([df_items,df2_items],axis=0)
+        print(df)
+
+""" Desnormalizo el archivo obtenido en el ciclo for anterior, en un .csv, que luego será importado en Tableau  """
+
+df.to_csv('iphone7.csv',sep='|',index=False) 
